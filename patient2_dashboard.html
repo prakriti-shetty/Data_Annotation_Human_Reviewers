@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient 2 - Heart Failure Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 20px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+        
+        .data-quality {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .excellent-data {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .missing-data {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .clinical-notes {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .clinical-notes h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .sbar-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .sbar-section .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .sbar-section .section-letter {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            margin-right: 15px;
+        }
+        
+        .situation .section-letter {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .background .section-letter {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .assessment .section-letter {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .recommendation .section-letter {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .sbar-section .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .sbar-section .section-content {
+            margin-left: 55px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .highlight {
+            background: #e8f5e8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .concern {
+            background: #ffebee;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .medication-highlight {
+            background: #e3f2fd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+        .vital-elevated {
+            background: #fff3e0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+            color: #f57c00;
+        }
+        
+        .good-activity {
+            background: #e8f5e8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>Heart Failure Patient Monitoring Dashboard - Patient 2</h1>
+            <p><strong>Patient ID:</strong> bbc8bd14-2989-4cc5-85b2-a6dea7487225 | <strong>Assessment Date:</strong> July 29, 2021</p>
+            
+            <div class="patient-info">
+                <div class="info-card">
+                    <div class="info-label">Age</div>
+                    <div class="info-value">66 years</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Heart Failure Type</div>
+                    <div class="info-value">HFrEF</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">NYHA Class</div>
+                    <div class="info-value">Class III</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">BMI</div>
+                    <div class="info-value">25.2 (Normal)</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Device</div>
+                    <div class="info-value">No Device</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Days in Program</div>
+                    <div class="info-value">63 days</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Medications</div>
+                    <div class="info-value">4 active:<br>Metoprolol-SR 50mg<br>Torsemide 20mg<br>Spironolactone 12.5mg<br>Empagliflozin</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">Heart Rate (Rest) - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="heartRateChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Data Quality:</strong> <span class="excellent-data">100% complete (14/14 days)</span> | 
+                    Range: 60.6-70.3 bpm | Average: 66.2 bpm | 
+                    <strong>Clinical Note:</strong> Upper-range HR (70 bpm) - consider beta-blocker uptitration
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Respiration Rate (Rest) - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="respirationChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Rest RR:</strong> <span class="excellent-data">100% complete</span> (21.0-23.1 breaths/min, avg 22.1) | 
+                    Elevated respiratory rate at peak of 14-day range
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Activity Hours - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Activity Hours:</strong> <span class="excellent-data">100% complete</span> (6.8-16.1 hrs, avg 11.9) | 
+                    Excellent activity level despite NYHA III - peaked at 16+ hours
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Step Count - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="stepChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Steps:</strong> <span class="excellent-data">100% complete</span> (1613-5694 steps, avg 3876) | 
+                    Variable but consistently in 1k-10k range, excellent for NYHA III
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">AF Burden - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="afChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>AF Burden:</strong> <span class="excellent-data">100% complete</span> (0.1-6.1%, avg 0.9%) | 
+                    <span class="missing-data">Concerning spike to 6.1% on July 25</span> - now improved
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Sleep Hours - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="sleepChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Sleep:</strong> <span class="excellent-data">93% complete</span> (0.9-7.3 hrs, avg 4.0) | 
+                    Consistently poor sleep duration requiring sleep hygiene intervention
+                </div>
+            </div>
+        </div>
+        
+        <!-- SBAR Summary Section -->
+        <div class="clinical-notes">
+            <h3>SBAR Clinical Summary</h3>
+            
+            <div class="sbar-section situation">
+                <div class="section-header">
+                    <div class="section-letter">S</div>
+                    <h4 class="section-title">Situation</h4>
+                </div>
+                <div class="section-content">
+                    66-year-old patient with chronic heart failure with reduced ejection fraction (HFrEF), NYHA III, on <span class="medication-highlight">Metoprolol-SR 50 mg, Torsemide 20 mg, Spironolactone 12.5 mg and Empagliflozin</span>; 63 days into the remote programme.
+                </div>
+            </div>
+            
+            <div class="sbar-section background">
+                <div class="section-header">
+                    <div class="section-letter">B</div>
+                    <h4 class="section-title">Background</h4>
+                </div>
+                <div class="section-content">
+                    <span class="highlight">BMI 25 kg/m²</span>, HFrEF, no implantable device documented. <span class="good-activity">Functional status has been consistently ambulatory with step-count bins oscillating between 1k–10k over the last 14 days</span>.
+                </div>
+            </div>
+            
+            <div class="sbar-section assessment">
+                <div class="section-header">
+                    <div class="section-letter">A</div>
+                    <h4 class="section-title">Assessment</h4>
+                </div>
+                <div class="section-content">
+                    <p>Based on data captured for 14/14 days for HR/RR and 13/14 days for sleep HR, the patient appears <span class="highlight">clinically stable and active</span> but with <span class="vital-elevated">upper-range HR and RR</span> and curtailed sleep.</p>
+                    
+                    <p><span class="vital-elevated">Today's resting HR is 70 bpm (14-day range 61–70)</span>; nocturnal HR is 60 bpm (55–62) with one missed night of data.</p>
+                    
+                    <p><span class="vital-elevated">Resting RR is 23 breaths/min, the peak of the 21–23 range</span>; nighttime RR is 21 breaths/min (18–23).</p>
+                    
+                    <p><span class="concern">AF burden is 0.7 % today (14-day range 0.07–6.1 % with an isolated spike to 6 % on 25 July)</span>.</p>
+                    
+                    <p><span class="good-activity">Activity remains high at 13 h with step bin 5k–10k (range 1k–10k)</span>.</p>
+                    
+                    <p><span class="concern">Sleep duration is low at 3 h (14-day range 1–7 h) with one missing day of data</span>.</p>
+                </div>
+            </div>
+            
+            <div class="sbar-section recommendation">
+                <div class="section-header">
+                    <div class="section-letter">R</div>
+                    <h4 class="section-title">Recommendation</h4>
+                </div>
+                <div class="section-content">
+                    No immediate intervention required. Continue current therapy and monitoring; <span class="medication-highlight">consider uptitrating beta-blocker at next review if resting HR ≥70 bpm persists</span>, and <span class="concern">address sleep hygiene</span>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Patient 2 data - extracted directly from JSON
+        const dates = ['Jul 16', 'Jul 17', 'Jul 18', 'Jul 19', 'Jul 20', 'Jul 21', 'Jul 22', 'Jul 23', 'Jul 24', 'Jul 25', 'Jul 26', 'Jul 27', 'Jul 28', 'Jul 29'];
+        const heartRateData = [70.34, 69.37, 64.76, 63.03, 60.57, 63.20, 65.98, 65.36, 66.30, 65.53, 67.34, 64.83, 70.13, 69.74];
+        const respirationData = [21.06, 22.41, 22.18, 21.47, 21.02, 22.89, 21.86, 22.40, 21.25, 22.38, 23.01, 21.46, 22.60, 23.07];
+        const activityData = [9.52, 16.08, 11.8, 8.78, 6.8, 9.42, 10.43, 14.62, 14.72, 11.92, 14.77, 12.18, 11.78, 13.28];
+        const stepData = [3600, 5694, 3618, 2260, 1613, 2510, 3455, 5404, 5108, 5168, 5579, 2579, 2606, 5064];
+        const afBurdenData = [0.34, 0.15, 0.07, 0.07, 1.00, 0.36, 0.67, 1.10, 1.22, 6.07, 0.46, 0.15, 0.36, 0.68];
+        const sleepData = [null, 0.9, 3.8, 6.13, 7.33, 5.85, 3.47, 4.22, 2.33, 4.87, 2.53, 3.2, 3.92, 3.42];
+
+        // Wait for Chart.js to load
+        window.addEventListener('load', function() {
+            // Heart Rate Chart
+            const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
+            new Chart(heartRateCtx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Heart Rate (Rest)',
+                        data: heartRateData,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 58,
+                            max: 72,
+                            title: {
+                                display: true,
+                                text: 'BPM'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Respiration Chart
+            const respirationCtx = document.getElementById('respirationChart').getContext('2d');
+            new Chart(respirationCtx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Respiration Rate (Rest)',
+                        data: respirationData,
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 20,
+                            max: 24,
+                            title: {
+                                display: true,
+                                text: 'Breaths/min'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Activity Chart
+            const activityCtx = document.getElementById('activityChart').getContext('2d');
+            new Chart(activityCtx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Activity Hours',
+                        data: activityData,
+                        backgroundColor: '#2ecc71',
+                        borderColor: '#27ae60',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 18,
+                            title: {
+                                display: true,
+                                text: 'Hours'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Step Count Chart
+            const stepCtx = document.getElementById('stepChart').getContext('2d');
+            new Chart(stepCtx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Step Count',
+                        data: stepData,
+                        borderColor: '#f1c40f',
+                        backgroundColor: 'rgba(241, 196, 15, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 6000,
+                            title: {
+                                display: true,
+                                text: 'Steps'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // AF Burden Chart
+            const afCtx = document.getElementById('afChart').getContext('2d');
+            new Chart(afCtx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'AF Burden (%)',
+                        data: afBurdenData,
+                        borderColor: '#e67e22',
+                        backgroundColor: 'rgba(230, 126, 34, 0.2)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 7,
+                            title: {
+                                display: true,
+                                text: 'AF Burden (%)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Sleep Chart
+            const sleepCtx = document.getElementById('sleepChart').getContext('2d');
+            new Chart(sleepCtx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Sleep Hours',
+                        data: sleepData,
+                        backgroundColor: '#9b59b6',
+                        borderColor: '#8e44ad',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 8,
+                            title: {
+                                display: true,
+                                text: 'Hours'
+                            }
+                        }
+                    }
+                }
+            });
+
+            console.log('Patient 2 charts loaded successfully');
+        });
+    </script>
+</body>
+</html>
