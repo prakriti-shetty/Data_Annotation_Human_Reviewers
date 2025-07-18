@@ -1,0 +1,52 @@
+name: Generate HTML index
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate index.html
+        run: |
+          echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Dashboard Index</title>
+          <style>
+            body { font-family: sans-serif; padding: 2em; max-width: 800px; margin: auto; }
+            input { width: 100%; padding: 0.5em; margin-bottom: 1em; font-size: 1em; }
+            ul { list-style-type: none; padding: 0; }
+            li { margin: 0.5em 0; }
+            a { text-decoration: none; color: #007bff; }
+            a:hover { text-decoration: underline; }
+          </style></head><body>
+          <h1>Patient Dashboard Files</h1>
+          <input type="text" id="search" placeholder="Search..." onkeyup="filterList()">
+          <ul id="fileList">' > index.html
+
+          for file in *.html; do
+            echo "<li><a href='$file'>$file</a></li>" >> index.html
+          done
+
+          echo '</ul>
+          <script>
+            function filterList() {
+              const query = document.getElementById("search").value.toLowerCase();
+              const items = document.querySelectorAll("#fileList li");
+              items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(query) ? "" : "none";
+              });
+            }
+          </script></body></html>' >> index.html
+
+      - name: Commit and push index.html
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add index.html
+          git commit -m "Auto-update index.html"
+          git push
