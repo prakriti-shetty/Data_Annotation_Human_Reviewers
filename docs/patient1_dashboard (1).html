@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient 1 - Heart Failure Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            color: #333;
+        }
+        
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .patient-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .info-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .info-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 20px;
+        }
+        
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+        
+        .data-quality {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .missing-data {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .stable-data {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .variable-data {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .transmission-failure {
+            background: #ffebee;
+            border: 2px solid #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        .clinical-notes {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .clinical-notes h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .alert-high { background: #ffebee; border-left: 4px solid #e74c3c; }
+        .alert-medium { background: #fff8e1; border-left: 4px solid #ff9800; }
+        .alert-low { background: #e8f5e8; border-left: 4px solid #4caf50; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>Heart Failure Patient Monitoring Dashboard - Patient 1</h1>
+            <p><strong>Patient ID:</strong> 059b3a73-9a69-492d-9579-f97ebf87a234 | <strong>Assessment Date:</strong> January 16, 2022</p>
+            
+            <div class="transmission-failure">
+                <h3 style="color: #e74c3c; margin: 0;">⚠️ COMPLETE DATA TRANSMISSION FAILURE ⚠️</h3>
+                <p style="margin: 10px 0 0 0;">All vital signs missing on current day - Device/connectivity issue requiring immediate attention</p>
+            </div>
+            
+            <div class="patient-info">
+                <div class="info-card">
+                    <div class="info-label">Age</div>
+                    <div class="info-value">79 years</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Heart Failure Type</div>
+                    <div class="info-value">HFrEF</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">NYHA Class</div>
+                    <div class="info-value">Class II</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">BMI</div>
+                    <div class="info-value">33.5 (Obese)</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Device</div>
+                    <div class="info-value">ICD</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Days in Program</div>
+                    <div class="info-value">46 days</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Medications</div>
+                    <div class="info-value">Bumetanide 2mg daily</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <div class="chart-card">
+                <div class="chart-title">Heart Rate (Rest) - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="heartRateChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Data Quality:</strong> <span class="stable-data">79% complete (11/14 days)</span> | 
+                    Range: 60.0 bpm (perfectly stable) | Average: 60.0 bpm | 
+                    <strong>Clinical Note:</strong> Excellent ICD rate control - remarkably stable
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Respiration Rate (Rest) - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="respirationChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Rest RR:</strong> <span class="stable-data">79% complete</span> (15.1-16.4 breaths/min, avg 15.8) | 
+                    Normal respiratory pattern for age and condition
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Activity Hours - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="activityChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Activity Hours:</strong> <span class="variable-data">71% complete</span> (0.5-9.5 hrs, avg 6.7) | 
+                    Very low activity day on Jan 7 (0.5 hrs) - possible illness or device issue
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Step Count - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="stepChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Steps:</strong> <span class="variable-data">64% complete</span> (1214-2808 steps, avg 2142) | 
+                    Consistent with sedentary lifestyle (1k-5k range)
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">AF Burden - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="afChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>AF Burden:</strong> <span class="variable-data">71% complete</span> (0.0-4.0%, avg 0.8%) | 
+                    <span class="missing-data">Concerning spike to 4% on Jan 13</span> - monitor for progression
+                </div>
+            </div>
+            
+            <div class="chart-card">
+                <div class="chart-title">Sleep Hours - 14-Day Trend</div>
+                <div class="chart-container">
+                    <canvas id="sleepChart"></canvas>
+                </div>
+                <div class="data-quality">
+                    <strong>Sleep:</strong> <span class="missing-data">43% complete</span> (4.2-7.4 hrs, avg 5.3) | 
+                    Poor data completeness limits sleep assessment
+                </div>
+            </div>
+        </div>
+        
+        <!-- SBAR Summary Section -->
+        <div class="clinical-notes">
+            <h3>SBAR Clinical Summary</h3>
+            
+            <div class="sbar-section situation">
+                <div class="section-header">
+                    <div class="section-letter">S</div>
+                    <h4 class="section-title">Situation</h4>
+                </div>
+                <div class="section-content">
+                    79-year-old man with HFrEF, NYHA II, on Bumetanide 2 mg daily, 46 days into remote monitoring.
+                </div>
+            </div>
+            
+            <div class="sbar-section background">
+                <div class="section-header">
+                    <div class="section-letter">B</div>
+                    <h4 class="section-title">Background</h4>
+                </div>
+                <div class="section-content">
+                    <span class="concern">BMI 33 kg/m² (obese I)</span>. Device: <span class="highlight">ICD in situ</span>. Functional baseline appears low-to-moderate (daily steps consistently 1–5 k). No other medications or prior outcomes documented.
+                </div>
+            </div>
+            
+            <div class="sbar-section assessment">
+                <div class="section-header">
+                    <div class="section-letter">A</div>
+                    <h4 class="section-title">Assessment</h4>
+                </div>
+                <div class="section-content">
+                    <p>Overall status seems <span class="highlight">clinically stable</span>; however, <span class="data-missing">today's transmission is largely missing (usable data on 0/6 key metrics)</span>, with prior data available on ~10/14 days.</p>
+                    
+                    <p><span class="stable-finding">HRrest has been flat (14-day range 60–66 bpm; median 60)</span> and <span class="stable-finding">HRsleep 60 bpm when present</span>, both appropriate for age and ICD support.</p>
+                    
+                    <p><span class="vital-range">RRrest 14-day range 15–20 rpm (median 16)</span> and <span class="vital-range">RRsleep 13–23 rpm</span> show no upward trend.</p>
+                    
+                    <p><span class="concern">AF burden remained low but variable (0–4 % over 14 days, isolated spike to 4 % on 13 Jan)</span>.</p>
+                    
+                    <p><span class="vital-range">Step count stayed within the 1–5 k bin whenever recorded</span>; <span class="vital-range">activity hours 0.5–9 h/day</span>. <span class="data-missing">No new data today precludes assessment of acute decompensation</span>.</p>
+                </div>
+            </div>
+            
+            <div class="sbar-section recommendation">
+                <div class="section-header">
+                    <div class="section-letter">R</div>
+                    <h4 class="section-title">Recommendation</h4>
+                </div>
+                <div class="section-content">
+                    No immediate clinical action required; <span class="concern">request patient/device follow-up to restore data flow</span> and continue watching AF burden for sustained rises above 5 %.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Reusable patient dashboard generator
+        function createPatientDashboard(patientData, vitalsData) {
+            const dates = vitalsData.dates;
+            const heartRateData = vitalsData.heartRate;
+            const respirationRestData = vitalsData.respirationRest;
+            const activityData = vitalsData.activity;
+            const stepData = vitalsData.steps;
+            const afBurdenData = vitalsData.afBurden;
+            const sleepData = vitalsData.sleep;
+
+            // Common chart options
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#f0f0f0'
+                        }
+                    }
+                },
+                elements: {
+                    point: {
+                        radius: 5,
+                        hoverRadius: 8
+                    },
+                    line: {
+                        tension: 0.2
+                    }
+                }
+            };
+
+            return {
+                createHeartRateChart: function(canvasId) {
+                    return new Chart(document.getElementById(canvasId), {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Heart Rate (Rest)',
+                                data: heartRateData,
+                                borderColor: '#e74c3c',
+                                backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                                fill: true,
+                                spanGaps: true,
+                                pointBackgroundColor: '#e74c3c',
+                                pointBorderColor: '#c0392b',
+                                pointBorderWidth: 2
+                            }]
+                        },
+                        options: {
+                            ...commonOptions,
+                            scales: {
+                                ...commonOptions.scales,
+                                y: {
+                                    ...commonOptions.scales.y,
+                                    min: Math.min(...heartRateData.filter(v => v !== null)) - 2,
+                                    max: Math.max(...heartRateData.filter(v => v !== null)) + 2,
+                                    title: {
+                                        display: true,
+                                        text: 'BPM'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createRespirationChart: function(canvasId) {
+                    return new Chart(document.getElementById(canvasId), {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Rest RR',
+                                data: respirationRestData,
+                                borderColor: '#3498db',
+                                backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                                fill: true,
+                                spanGaps: true,
+                                pointBackgroundColor: '#3498db',
+                                pointBorderColor: '#2980b9',
+                                pointBorderWidth: 2
+                            }]
+                        },
+                        options: {
+                            ...commonOptions,
+                            scales: {
+                                ...commonOptions.scales,
+                                y: {
+                                    ...commonOptions.scales.y,
+                                    min: 14,
+                                    max: 20,
+                                    title: {
+                                        display: true,
+                                        text: 'Breaths/min'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createActivityChart: function(canvasId) {
+                    return new Chart(document.getElementById(canvasId), {
+                        type: 'bar',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Activity Hours',
+                                data: activityData,
+                                backgroundColor: activityData.map(val => {
+                                    if (val === null) return 'rgba(200, 200, 200, 0.3)';
+                                    if (val < 2) return 'rgba(231, 76, 60, 0.8)';
+                                    if (val < 5) return 'rgba(243, 156, 18, 0.8)';
+                                    return 'rgba(46, 204, 113, 0.8)';
+                                }),
+                                borderColor: '#2ecc71',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            ...commonOptions,
+                            scales: {
+                                ...commonOptions.scales,
+                                y: {
+                                    ...commonOptions.scales.y,
+                                    min: 0,
+                                    max: Math.max(...activityData.filter(v => v !== null)) + 2,
+                                    title: {
+                                        display: true,
+                                        text: 'Hours'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createStepChart: function(canvasId) {
+                    return new Chart(document.getElementById(canvasId), {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Step Count',
+                                data: stepData,
+                                borderColor: '#f1c40f',
+                                backgroundColor: 'rgba(241, 196, 15, 0.2)',
+                                fill: true,
+                                spanGaps: true,
+                                pointBackgroundColor: '#f1c40f'
+                            }]
+                        },
+                        options: {
+                            ...commonOptions,
+                            scales: {
+                                ...commonOptions.scales,
+                                y: {
+                                    ...commonOptions.scales.y,
+                                    min: 0,
+                                    max: Math.max(...stepData.filter(v => v !== null)) + 500,
+                                    title: {
+                                        display: true,
+                                        text: 'Steps'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createAFChart: function(canvasId) {
+                    return new Chart(document.getElementById(canvasId), {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'AF Burden (%)',
+                                data: afBurdenData,
+                                borderColor: '#e67e22',
+                                backgroundColor: 'rgba(230, 126, 34, 0.2)',
+                                fill: true,
+                                spanGaps: true,
+                                pointBackgroundColor: afBurdenData.map(val => {
+                                    if (val === null) return '#ccc';
+                                    if (val > 3) return '#e74c3c';
+                                    if (val > 1) return '#f39c12';
+                                    return '#27ae60';
+                                }),
+                                pointRadius: afBurdenData.map(val => val > 3 ? 8 : 5)
+                            }]
+                        },
+                        options: {
+                            ...commonOptions,
+                            scales: {
+                                ...commonOptions.scales,
+                                y: {
+                                    ...commonOptions.scales.y,
+                                    min: 0,
+                                    max: Math.max(...afBurdenData.filter(v => v !== null)) + 1,
+                                    title: {
+                                        display: true,
+                                        text: 'AF Burden (%)'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                },
+                
+                createSleepChart: function(canvasId) {
+                    return new Chart(document.getElementById(canvasId), {
+                        type: 'bar',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Sleep Hours',
+                                data: sleepData,
+                                backgroundColor: sleepData.map(val => {
+                                    if (val === null) return 'rgba(200, 200, 200, 0.3)';
+                                    if (val < 5) return 'rgba(243, 156, 18, 0.8)';
+                                    if (val < 7) return 'rgba(52, 73, 94, 0.8)';
+                                    return 'rgba(46, 204, 113, 0.8)';
+                                }),
+                                borderColor: '#34495e',
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            ...commonOptions,
+                            scales: {
+                                ...commonOptions.scales,
+                                y: {
+                                    ...commonOptions.scales.y,
+                                    min: 0,
+                                    max: 10,
+                                    title: {
+                                        display: true,
+                                        text: 'Hours'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+        }
+
+        // Wait for page to load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Patient 1 data
+            const patient1VitalsData = {
+                dates: ['Jan 03', 'Jan 04', 'Jan 05', 'Jan 06', 'Jan 07', 'Jan 08', 'Jan 09', 'Jan 10', 'Jan 11', 'Jan 12', 'Jan 13', 'Jan 14', 'Jan 15', 'Jan 16'],
+                heartRate: [60.0, 60.01, 60.02, null, null, 60.0, 60.0, 60.0, 60.01, 60.0, 60.0, 60.0, 60.0, null],
+                respirationRest: [15.7, 15.6, 15.8, null, null, 15.8, 15.1, 16.4, 16.1, 15.5, 16.1, 15.8, 16.0, null],
+                activity: [9.0, 8.5, null, null, 0.5, 5.5, 3.2, 8.8, 9.5, 7.7, 8.4, 5.7, null, null],
+                steps: [2715, 2593, null, null, null, 1636, 1214, 1953, 2570, 2084, 1706, 2808, null, null],
+                afBurden: [0.07, 0.29, null, null, 0.0, 0.14, 0.09, 1.44, 1.41, 0.57, 3.97, 0.23, null, null],
+                sleep: [5.7, null, null, null, null, 5.3, null, 7.4, 4.2, 4.2, 5.0, null, null, null]
+            };
+
+            const dashboard = createPatientDashboard({}, patient1VitalsData);
+            
+            // Create all charts
+            dashboard.createHeartRateChart('heartRateChart');
+            dashboard.createRespirationChart('respirationChart');
+            dashboard.createActivityChart('activityChart');
+            dashboard.createStepChart('stepChart');
+            dashboard.createAFChart('afChart');
+            dashboard.createSleepChart('sleepChart');
+
+            console.log('Patient 1 Dashboard Loaded with integrated SBAR');
+        });
+    </script>
+    
+    <!-- Additional styling for SBAR section -->
+    <style>
+        .sbar-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .sbar-section .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .sbar-section .section-letter {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            margin-right: 15px;
+        }
+        
+        .situation .section-letter {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .background .section-letter {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .assessment .section-letter {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+        
+        .recommendation .section-letter {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .sbar-section .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .sbar-section .section-content {
+            margin-left: 55px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .highlight {
+            background: #e8f5e8;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .concern {
+            background: #ffebee;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        
+        .data-missing {
+            background: #ffcdd2;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+            color: #c62828;
+        }
+        
+        .stable-finding {
+            background: #c8e6c9;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+            color: #2e7d32;
+        }
+        
+        .vital-range {
+            background: #e3f2fd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+            color: #1565c0;
+        }
+    </style>
+</body>
+</html>
